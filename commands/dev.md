@@ -1,6 +1,6 @@
 ---
 name: "ft:dev"
-description: "플러그인 개발 — ft 플러그인의 스킬/훅을 수정하고, 버전을 올리고, GitHub에 배포한다. '플러그인 수정', '스킬 수정', '버전 올려줘', '배포해줘', '업데이트 반영', 'ft:dev' 같은 요청이 오면 이 스킬을 사용한다."
+description: "플러그인 개발 — ft 플러그인의 스킬/훅을 수정하고, 버전을 올리고, GitHub에 배포한다."
 ---
 
 # /ft:dev — 플러그인 개발/배포
@@ -21,21 +21,20 @@ ft 플러그인의 스킬, 훅, 설정을 수정하고 배포하는 워크플로
 ```
 
 1. 플러그인 루트 찾기 (`.claude-plugin/plugin.json` 검색)
-2. 해당 스킬의 SKILL.md 읽기
+2. 해당 스킬/커맨드의 .md 읽기 (skills/ 또는 commands/ 확인)
 3. 사용자와 대화하며 수정할 내용 파악
-4. SKILL.md 수정
-5. 관련 command 파일도 함께 수정 (있으면)
-6. "수정 완료. `/ft:dev release`로 배포하세요." 안내
+4. .md 수정
+5. "수정 완료. `/ft:dev release`로 배포하세요." 안내
 
-### 모드 2: 스킬 추가
+### 모드 2: 스킬/커맨드 추가
 ```
 /ft:dev add 스킬명
 ```
 
 1. 플러그인 루트 찾기
-2. `skills/{스킬명}/SKILL.md` 생성 (프론트매터 + 기본 구조)
-3. `commands/{네임스페이스}/{스킬명}.md` 생성
-4. 사용자와 대화하며 스킬 내용 작성
+2. 자동 발동이 안전한 것 → `skills/{스킬명}/SKILL.md` 생성
+3. 명시적 호출만 할 것 → `commands/{스킬명}.md` 생성
+4. 사용자와 대화하며 내용 작성
 5. "추가 완료. `/ft:dev release`로 배포하세요." 안내
 
 ### 모드 3: 릴리스
@@ -53,14 +52,14 @@ ft 플러그인의 스킬, 훅, 설정을 수정하고 배포하는 워크플로
 5. 사용자 확인 후 plugin.json 버전 업데이트
 6. 커밋 + push
 7. **marketplace.json SHA 업데이트** — 이 단계를 빠뜨리면 `plugin install`이 구 버전을 가져온다:
-   - 마켓플레이스 로컬 캐시 찾기: `~/.claude/plugins/marketplaces/ft/`
+   - 마켓플레이스 로컬 캐시 찾기: `~/.claude/plugins/marketplaces/featurecraft/`
    - `git pull` 로 최신화
    - `.claude-plugin/marketplace.json`의 `"sha"` 필드를 방금 push한 커밋의 **전체 40자 SHA**로 업데이트 (`git rev-parse HEAD`). 짧은 SHA를 쓰면 `plugin install`이 실패한다.
    - 커밋 + push (메시지: `chore: update marketplace SHA to v{버전}`)
 8. **플러그인 업데이트 실행** — `installed_plugins.json`을 갱신해야 다음 세션에서도 반영된다:
    - `claude plugin update ft@featurecraft` 실행 (Bash 도구 사용)
    - 실패 시 `claude plugin uninstall ft@featurecraft && claude plugin install ft@featurecraft` 로 재설치
-9. 안내: "배포 완료. 현재 세션에 이미 반영됨. (캐시 직접 수정 → 스킬 호출 시 최신 SKILL.md 읽음)"
+9. 안내: "배포 완료. 현재 세션에 이미 반영됨. (캐시 직접 수정 → 스킬 호출 시 최신 .md 읽음)"
 
 > **왜 SHA 업데이트가 필수인가:**
 > 플러그인 설치 시스템은 `marketplace.json`의 `sha` 필드에 고정된 커밋을 체크아웃한다.
@@ -68,7 +67,7 @@ ft 플러그인의 스킬, 훅, 설정을 수정하고 배포하는 워크플로
 > plugin.json 버전 + marketplace.json SHA 두 곳을 모두 올려야 완전한 배포다.
 
 > **현재 세션 반영 원리:**
-> ft:dev는 캐시 파일을 직접 수정한 뒤 push한다. 스킬은 호출 시마다 SKILL.md를 캐시에서 읽으므로,
+> ft:dev는 캐시 파일을 직접 수정한 뒤 push한다. 스킬/커맨드는 호출 시마다 .md를 캐시에서 읽으므로,
 > 캐시가 수정된 현재 세션에서는 즉시 반영된다. `plugin update`는 `installed_plugins.json`의
 > 버전/SHA를 갱신하여 **다음 세션**에서도 올바른 버전을 인식하게 하는 역할이다.
 
@@ -79,15 +78,31 @@ ft 플러그인의 스킬, 훅, 설정을 수정하고 배포하는 워크플로
 
 1. 플러그인 루트 찾기
 2. 현재 버전 출력
-3. 스킬 목록 + 각 SKILL.md 줄 수
+3. 스킬 목록 (skills/) + 커맨드 목록 (commands/)
 4. 훅 목록
 5. 미커밋 변경 사항
 6. 마지막 배포일 (git log에서)
 
-## 플러그인 루트 찾기
+## 플러그인 구조
 
-1. 현재 디렉토리에서 상위로 `.claude-plugin/plugin.json` 검색
-2. 못 찾으면 → "플러그인 루트를 찾을 수 없습니다. 플러그인 폴더에서 실행해주세요." 안내
+```
+featurecraft/
+├── .claude-plugin/plugin.json
+├── skills/          ← 자동 발동 OK (읽기/분석)
+│   ├── plan/SKILL.md
+│   ├── scan/SKILL.md
+│   ├── review/SKILL.md
+│   └── roadmap/SKILL.md
+├── commands/        ← 명시적 호출만 (쓰기/Git)
+│   ├── build.md
+│   ├── push.md
+│   ├── pull.md
+│   ├── release.md
+│   └── dev.md
+├── scripts/
+├── hooks.json
+└── README.md
+```
 
 ## 버전 규칙 (Semantic Versioning)
 
@@ -112,7 +127,7 @@ MAJOR: 구조 변경, 호환성 깨짐
 ## 경계
 
 **한다:**
-- 스킬/훅/커맨드 파일 수정/추가
+- 스킬/커맨드/훅 파일 수정/추가
 - plugin.json 버전 업데이트
 - 커밋 + push (릴리스 모드)
 - 플러그인 상태 확인
