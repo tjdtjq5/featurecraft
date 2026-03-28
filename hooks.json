@@ -1,5 +1,5 @@
 {
-  "description": "FeatureCraft — Feature.md 자동 감지",
+  "description": "ft — Feature.md 자동 감지",
   "hooks": {
     "UserPromptSubmit": [
       {

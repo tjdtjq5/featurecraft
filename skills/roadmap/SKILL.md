@@ -1,5 +1,5 @@
 ---
-name: ft-roadmap
+name: roadmap
 description: "로드맵 기획 — 프로젝트/패키지 단위의 큰 그림을 잡고, Pillar/모듈별 Feature.md를 일괄 생성한다. '로드맵', 'roadmap', '전체 계획', '큰 그림', 'MVP 기획', '모듈 나눠줘', 'Pillar 잡아줘', '피처 묶음 계획' 같은 요청이 오면 이 스킬을 사용한다. 개별 피처 1개만 기획하려면 /ft:plan을 사용할 것."
 ---
 

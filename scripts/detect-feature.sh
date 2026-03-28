@@ -1,5 +1,5 @@
 #!/bin/bash
-# FeatureCraft — Feature.md 자동 감지 + 컨텍스트 주입 훅
+# ft — Feature.md 자동 감지 + 컨텍스트 주입 훅
 # UserPromptSubmit 시 실행
 #
 # 해결하는 문제들:
@@ -8,7 +8,7 @@
 # 3. 자연어 트리거 → 스킬 명시 안 해도 컨텍스트 자동 주입
 
 # 안전장치: 에러 시 원인 출력 후 정상 종료 (훅 시스템은 깨지지 않되, 디버깅은 가능)
-trap 'echo "[FeatureCraft] hook error at line $LINENO: $BASH_COMMAND" >&2; exit 0' ERR
+trap 'echo "[ft] hook error at line $LINENO: $BASH_COMMAND" >&2; exit 0' ERR
 set +e
 
 DIR="$(pwd 2>/dev/null || echo ".")"
@@ -39,7 +39,7 @@ fi
 FEATURE_NAME=$(head -1 "$FEATURE_PATH" | sed 's/^# //')
 
 echo ""
-echo "[FeatureCraft] 피처 컨텍스트 감지: $FEATURE_NAME"
+echo "[ft] 피처 컨텍스트 감지: $FEATURE_NAME"
 echo "  경로: $FEATURE_PATH"
 
 # 상태 추출
@@ -78,7 +78,7 @@ fi
 # 스킬 안내 (Feature.md 유무 기반 — 트리거 충돌 해결)
 echo ""
 echo "  → 이 피처를 수정/확장하려면: /ft:build"
-echo "  → 코드 리뷰: /review"
+echo "  → 코드 리뷰: /ft:review"
 echo "  → 위 API와 주의사항을 반드시 참고하세요."
 
 # .featurecraft/learnings/ 존재 시
