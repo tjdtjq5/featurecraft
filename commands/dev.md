@@ -50,21 +50,23 @@ ft 플러그인의 스킬, 훅, 설정을 수정하고 배포하는 워크플로
    - 스킬 추가/삭제 → minor (0.1.0 → 0.2.0)
    - 구조 변경 → major (0.1.0 → 1.0.0)
 5. 사용자 확인 후 plugin.json 버전 업데이트
-6. 커밋 + push
-7. **marketplace.json SHA 업데이트** — 이 단계를 빠뜨리면 `plugin install`이 구 버전을 가져온다:
-   - 마켓플레이스 로컬 캐시 찾기: `~/.claude/plugins/marketplaces/featurecraft/`
-   - `git pull` 로 최신화
-   - `.claude-plugin/marketplace.json`의 `"sha"` 필드를 방금 push한 커밋의 **전체 40자 SHA**로 업데이트 (`git rev-parse HEAD`). 짧은 SHA를 쓰면 `plugin install`이 실패한다.
-   - 커밋 + push (메시지: `chore: update marketplace SHA to v{버전}`)
-8. **플러그인 업데이트 실행** — `installed_plugins.json`을 갱신해야 다음 세션에서도 반영된다:
-   - `claude plugin update ft@featurecraft` 실행 (Bash 도구 사용)
-   - 실패 시 `claude plugin uninstall ft@featurecraft && claude plugin install ft@featurecraft` 로 재설치
-9. 안내: "배포 완료. 현재 세션에 이미 반영됨. (캐시 직접 수정 → 스킬 호출 시 최신 .md 읽음)"
+6. **코드 + marketplace SHA를 한 번에 커밋 + push** (충돌 방지):
+   - 코드 변경사항을 스테이징 (`git add -A`)
+   - 커밋 (아직 push 안 함)
+   - push → SHA 확정 (`git rev-parse HEAD`)
+   - **같은 클론(cache)**에서 `.claude-plugin/marketplace.json`의 `"sha"` 필드를 방금 push한 커밋의 **전체 40자 SHA**로 업데이트
+   - marketplace SHA 업데이트 커밋 + push (메시지: `chore: update marketplace SHA to v{버전}`)
+   - 마켓플레이스 로컬 클론(`~/.claude/plugins/marketplaces/featurecraft/`)에서 `git pull`만 실행 (push 안 함, pull만)
+7. **플러그인 업데이트 실행** — `installed_plugins.json`을 갱신해야 다음 세션에서도 반영된다:
+   - `claude plugin uninstall ft@featurecraft && claude plugin install ft@featurecraft` 실행 (Bash 도구 사용)
+8. 안내: "배포 완료. 현재 세션에 이미 반영됨."
 
-> **왜 SHA 업데이트가 필수인가:**
-> 플러그인 설치 시스템은 `marketplace.json`의 `sha` 필드에 고정된 커밋을 체크아웃한다.
-> 이 SHA를 업데이트하지 않으면, 아무리 push해도 `plugin install`은 옛 커밋을 가져온다.
-> plugin.json 버전 + marketplace.json SHA 두 곳을 모두 올려야 완전한 배포다.
+> **왜 한 클론에서 모든 push를 해야 하는가:**
+> 플러그인 소스와 marketplace.json이 같은 GitHub 리포에 있다.
+> 두 개의 로컬 클론(cache + marketplaces)에서 각각 push하면
+> marketplace.json에서 rebase 충돌이 반복 발생한다.
+> **해결:** cache 클론에서 코드 + marketplace SHA를 모두 push하고,
+> marketplaces 클론은 `git pull`로 동기화만 한다.
 
 > **현재 세션 반영 원리:**
 > ft:dev는 캐시 파일을 직접 수정한 뒤 push한다. 스킬/커맨드는 호출 시마다 .md를 캐시에서 읽으므로,
