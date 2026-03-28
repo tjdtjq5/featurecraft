@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "test -n \"$CLAUDE_PLUGIN_ROOT\" && bash \"$CLAUDE_PLUGIN_ROOT\"/scripts/detect-feature.sh || true",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/detect-feature.sh",
             "timeout": 3
           }
         ]
