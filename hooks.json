@@ -1,0 +1,17 @@
+{
+  "description": "FeatureCraft — Feature.md 자동 감지",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PLUGIN_ROOT\"/scripts/detect-feature.sh",
+            "timeout": 3
+          }
+        ]
+      }
+    ]
+  }
+}
