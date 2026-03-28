@@ -7,8 +7,8 @@
 # 2. 강제력 부족 → Feature.md 핵심 내용을 직접 출력
 # 3. 자연어 트리거 → 스킬 명시 안 해도 컨텍스트 자동 주입
 
-# 안전장치: 어떤 에러든 조용히 종료 (훅 에러 방지)
-trap 'exit 0' ERR
+# 안전장치: 에러 시 원인 출력 후 정상 종료 (훅 시스템은 깨지지 않되, 디버깅은 가능)
+trap 'echo "[FeatureCraft] hook error at line $LINENO: $BASH_COMMAND" >&2; exit 0' ERR
 set +e
 
 DIR="$(pwd 2>/dev/null || echo ".")"
