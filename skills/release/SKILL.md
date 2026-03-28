@@ -1,5 +1,5 @@
 ---
-name: release
+name: "ft:release"
 description: "릴리스 — dev(기본브랜치)에서 main으로 PR 생성 + 머지한다. '릴리스', 'release', 'main에 올려줘', '배포', 'main 머지' 같은 요청이 오면 이 스킬을 사용한다."
 ---
 
