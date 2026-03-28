@@ -1,18 +1,18 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "featurecraft",
+  "name": "ft",
   "description": "Feature-driven development plugin for Claude Code",
   "owner": {
     "name": "tjdtj"
   },
   "plugins": [
     {
-      "name": "featurecraft",
+      "name": "ft",
       "description": "Feature-driven development plugin. Structures projects into feature units with Feature.md-based dependency chaining, ensuring Claude references existing code instead of reinventing it.",
       "source": {
         "source": "url",
         "url": "https://github.com/tjdtjq5/featurecraft.git",
-        "sha": "4d27e6ab931c18c1fa4aa1a1c79d04e8c91dbca9"
+        "sha": "a20624871e510fe6726e6549b6d30ad2b079f387"
       },
       "category": "development",
       "homepage": "https://github.com/tjdtjq5/featurecraft"
