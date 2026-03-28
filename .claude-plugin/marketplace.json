@@ -9,7 +9,11 @@
     {
       "name": "featurecraft",
       "description": "Feature-driven development plugin. Structures projects into feature units with Feature.md-based dependency chaining, ensuring Claude references existing code instead of reinventing it.",
-      "source": ".",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/tjdtjq5/featurecraft.git",
+        "sha": "abc4c9463b438316782348ff84a6878725054955"
+      },
       "category": "development",
       "homepage": "https://github.com/tjdtjq5/featurecraft"
     }
