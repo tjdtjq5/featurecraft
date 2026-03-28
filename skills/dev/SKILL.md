@@ -57,12 +57,20 @@ ft 플러그인의 스킬, 훅, 설정을 수정하고 배포하는 워크플로
    - `git pull` 로 최신화
    - `.claude-plugin/marketplace.json`의 `"sha"` 필드를 방금 push한 커밋의 **전체 40자 SHA**로 업데이트 (`git rev-parse HEAD`). 짧은 SHA를 쓰면 `plugin install`이 실패한다.
    - 커밋 + push (메시지: `chore: update marketplace SHA to v{버전}`)
-8. 안내: "배포 완료. 사용자는 `claude plugin update ft` 로 업데이트할 수 있습니다."
+8. **플러그인 업데이트 실행** — `installed_plugins.json`을 갱신해야 다음 세션에서도 반영된다:
+   - `claude plugin update ft@featurecraft` 실행 (Bash 도구 사용)
+   - 실패 시 `claude plugin uninstall ft@featurecraft && claude plugin install ft@featurecraft` 로 재설치
+9. 안내: "배포 완료. 현재 세션에 이미 반영됨. (캐시 직접 수정 → 스킬 호출 시 최신 SKILL.md 읽음)"
 
 > **왜 SHA 업데이트가 필수인가:**
 > 플러그인 설치 시스템은 `marketplace.json`의 `sha` 필드에 고정된 커밋을 체크아웃한다.
 > 이 SHA를 업데이트하지 않으면, 아무리 push해도 `plugin install`은 옛 커밋을 가져온다.
 > plugin.json 버전 + marketplace.json SHA 두 곳을 모두 올려야 완전한 배포다.
+
+> **현재 세션 반영 원리:**
+> ft:dev는 캐시 파일을 직접 수정한 뒤 push한다. 스킬은 호출 시마다 SKILL.md를 캐시에서 읽으므로,
+> 캐시가 수정된 현재 세션에서는 즉시 반영된다. `plugin update`는 `installed_plugins.json`의
+> 버전/SHA를 갱신하여 **다음 세션**에서도 올바른 버전을 인식하게 하는 역할이다.
 
 ### 모드 4: 상태 확인
 ```
