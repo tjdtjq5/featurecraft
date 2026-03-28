@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "featurecraft",
+  "description": "Feature-driven development plugin for Claude Code",
+  "owner": {
+    "name": "tjdtj"
+  },
+  "plugins": [
+    {
+      "name": "featurecraft",
+      "description": "Feature-driven development plugin. Structures projects into feature units with Feature.md-based dependency chaining, ensuring Claude references existing code instead of reinventing it.",
+      "source": ".",
+      "category": "development",
+      "homepage": "https://github.com/tjdtjq5/featurecraft"
+    }
+  ]
+}
