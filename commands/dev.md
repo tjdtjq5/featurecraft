@@ -115,7 +115,6 @@ ft 플러그인의 스킬, 훅, 설정을 수정하고 배포하는 워크플로
 featurecraft/
 ├── .claude-plugin/plugin.json
 ├── skills/          ← 자동 발동 OK (읽기/분석)
-│   ├── plan/SKILL.md
 │   ├── scan/SKILL.md
 │   ├── review/SKILL.md
 │   └── roadmap/SKILL.md

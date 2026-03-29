@@ -20,7 +20,7 @@ claude plugin install ft
 
 ### 새 프로젝트
 ```
-/ft:plan 인벤토리 시스템       → Feature.md 생성
+/ft:roadmap 인벤토리 시스템    → Feature.md 생성 (1개~N개)
 /ft:build                     → 코드 구현 (기존 피처 API 자동 참조)
 /ft:review                    → 코드 리뷰
 /ft:push                      → 커밋 → PR → 머지
@@ -32,14 +32,13 @@ claude plugin install ft
 /ft:scan InGame/Inventory     → 해당 폴더를 피처로 등록 (Feature.md 역생성)
 ```
 
-## 명령어 (9개)
+## 명령어 (8개)
 
 ### 피처 개발
 | 명령 | 역할 |
 |------|------|
-| `/ft:plan` | 요구사항 정리 → Feature.md 생성 |
+| `/ft:roadmap` | Feature.md 생성 (1개~N개) + 구현 순서 도출 |
 | `/ft:build` | Feature.md 의존성 체이닝 → 코드 구현 |
-| `/ft:roadmap` | 프로젝트/패키지 로드맵 → Feature.md 일괄 생성 |
 | `/ft:scan` | 프로젝트 분석 / 기존 폴더 피처 등록 |
 
 ### 코드 리뷰
