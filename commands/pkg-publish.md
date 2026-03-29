@@ -92,11 +92,31 @@ README.md를 현재 패키지 상태에 맞게 갱신한다:
 - 삭제된 기능 제거, 추가된 기능 반영
 - Breaking Changes가 있으면 별도 섹션 추가
 
+### 4.7단계: 모노레포 루트 README.md 갱신
+
+unity-packages 루트의 `README.md`에서 해당 패키지 섹션을 업데이트한다:
+- 패키지 제목의 버전 배지: `` `v{이전}` `` → `` `v{새버전}` ``
+- 설치 URL의 태그: `#{패키지명}/v{이전}` → `#{패키지명}/v{새버전}`
+- 설명이 변경되었으면 반영 (package.json의 description 참조)
+
+예시:
+```markdown
+// Before
+### Editor Toolkit `v1.3.1`
+"com.tjdtjq5.editor-toolkit": "...#editor-toolkit/v1.3.1"
+
+// After
+### Editor Toolkit `v1.3.2`
+"com.tjdtjq5.editor-toolkit": "...#editor-toolkit/v1.3.2"
+```
+
+루트 README에 해당 패키지 섹션이 없으면 스킵 (첫 배포 시 수동 추가 안내).
+
 ### 5단계: 커밋 + 태그 + Push
 
 ```bash
 cd unity-packages
-git add Packages/com.tjdtjq5.{패키지명}/
+git add com.tjdtjq5.{패키지명}/ README.md
 git commit -m "feat({패키지명}): v{새버전} — {변경 요약}"
 git tag {패키지명}/v{새버전}
 git push origin main --tags
