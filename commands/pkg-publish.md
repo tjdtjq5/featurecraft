@@ -83,6 +83,15 @@ CHANGELOG.md 상단에 새 버전 엔트리 추가:
 - git log에서 마지막 태그 이후 커밋 메시지 수집
 - 날짜 + 버전 + 변경 요약
 
+### 4.5단계: README.md 최신화
+
+README.md를 현재 패키지 상태에 맞게 갱신한다:
+- Feature.md 또는 package.json에서 컴포넌트/API 목록 수집
+- 설치 URL의 버전 태그를 새 버전으로 업데이트
+- 의존성 목록 갱신
+- 삭제된 기능 제거, 추가된 기능 반영
+- Breaking Changes가 있으면 별도 섹션 추가
+
 ### 5단계: 커밋 + 태그 + Push
 
 ```bash
@@ -120,5 +129,5 @@ git push origin main --tags
 
 ## 경계
 
-**한다:** 파일 복사, 구조 검증, 버전 범프, CHANGELOG 갱신, 커밋, 태그, push
+**한다:** 파일 복사, 구조 검증, 버전 범프, CHANGELOG 갱신, README 최신화, 커밋, 태그, push
 **안한다:** 소스 코드 수정, 프로젝트 manifest.json 변경, force push
