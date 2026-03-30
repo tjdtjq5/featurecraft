@@ -52,13 +52,21 @@ UPM git 패키지는 `Library/PackageCache/`에 읽기 전용으로 설치된다
 "com.tjdtjq5.addrx": "file:../../unity-packages/Packages/com.tjdtjq5.addrx"
 ```
 
-**원본 URL을 주석으로 보존** (복원용):
-manifest.json은 JSON이라 주석 불가. 대신 별도 필드에 저장:
+**원본 URL을 dependencies 밖에 보존** (복원용):
+`dependencies` 안에 백업 필드를 넣으면 Unity가 패키지로 인식하여 에러가 발생한다.
+반드시 `dependencies` 객체 바깥에 별도 키로 저장한다:
 
 ```json
-"com.tjdtjq5.addrx": "file:../../unity-packages/Packages/com.tjdtjq5.addrx",
-"com.tjdtjq5.addrx__remote": "https://github.com/tjdtjq5/unity-packages.git?path=Packages/com.tjdtjq5.addrx#addrx/v0.1.0"
+{
+  "dependencies": {
+    "com.tjdtjq5.addrx": "file:../../unity-packages/Packages/com.tjdtjq5.addrx"
+  },
+  "_addrx_remote": "https://github.com/tjdtjq5/unity-packages.git?path=Packages/com.tjdtjq5.addrx#addrx/v0.1.0"
+}
 ```
+
+**주의: `__remote` 같은 키를 `dependencies` 안에 넣으면 안 된다.**
+Unity가 이를 패키지 이름으로 해석하여 `name` 불일치 에러가 발생한다.
 
 ### 4단계: 안내
 
@@ -84,16 +92,24 @@ manifest.json에서 `file:` 경로인지 확인.
 
 ### 2단계: 원본 URL 복원
 
-저장된 `__remote` 필드에서 복원:
+dependencies 밖의 `_패키지명_remote` 필드에서 복원:
 
 ```json
 // Before
-"com.tjdtjq5.addrx": "file:../../unity-packages/Packages/com.tjdtjq5.addrx",
-"com.tjdtjq5.addrx__remote": "https://github.com/...#addrx/v0.1.0"
+{
+  "dependencies": {
+    "com.tjdtjq5.addrx": "file:../../unity-packages/Packages/com.tjdtjq5.addrx"
+  },
+  "_addrx_remote": "https://github.com/...#addrx/v0.1.0"
+}
 
 // After
-"com.tjdtjq5.addrx": "https://github.com/...#addrx/v0.1.0"
-// __remote 필드 제거
+{
+  "dependencies": {
+    "com.tjdtjq5.addrx": "https://github.com/...#addrx/v0.1.0"
+  }
+}
+// _addrx_remote 필드 제거
 ```
 
 ### 3단계: 최신 버전 확인
@@ -123,7 +139,7 @@ manifest.json에서 `file:` 경로인지 확인.
 | manifest.json 없음 | "Unity 프로젝트가 아닙니다" |
 | 패키지가 manifest에 없음 | "해당 패키지가 설치되어 있지 않습니다" |
 | unity-packages 로컬 경로 없음 | 사용자에게 경로 질문 |
-| `__remote` 필드 없이 --off | git 태그에서 최신 URL 자동 생성 |
+| `_패키지명_remote` 필드 없이 --off | git 태그에서 최신 URL 자동 생성 |
 | 이미 로컬/원격 모드 | "이미 {모드}입니다" 안내 |
 
 ## 경계

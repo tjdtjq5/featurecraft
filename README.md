@@ -12,7 +12,7 @@ ft는 Feature.md 기반 의존성 체이닝으로 이 문제를 해결합니다.
 ## 설치
 
 ```bash
-claude plugin marketplace add tjdtjq5/featurecraft
+claude plugin marketplace add github:{owner}/featurecraft
 claude plugin install ft
 ```
 
