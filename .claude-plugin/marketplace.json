@@ -11,7 +11,7 @@
       "name": "ft",
       "description": "Feature-driven development plugin. Structures projects into feature units with Feature.md-based dependency chaining, ensuring Claude references existing code instead of reinventing it.",
       "category": "development",
-      "source": "."
+      "source": "./"
     }
   ]
 }
