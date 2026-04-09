@@ -1,14 +1,13 @@
 {
-  "description": "ft — Feature.md 자동 감지",
+  "description": "ft — SessionStart 컨텍스트 주입",
   "hooks": {
-    "UserPromptSubmit": [
+    "SessionStart": [
       {
-        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/detect-feature.sh",
-            "timeout": 3
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/inject-ft-context.sh",
+            "timeout": 5
           }
         ]
       }
