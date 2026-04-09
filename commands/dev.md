@@ -89,7 +89,27 @@ diff -r "$CACHE" "$MARKET" --brief 2>&1 | grep -v "\.git\|marketplace\.json"
 - **(b) marketplaces → cache 복사** — 사용자가 marketplaces에서 편집한 경우 (정상)
 - **(c) 무시하고 진행** — 사용자가 차이를 이해할 때
 
-복사: `rsync -av --exclude='.git' --exclude='marketplace.json' {source}/ {target}/`
+**복사 명령 (OS별)**:
+
+- **Linux/macOS** (rsync 사용 가능):
+  ```bash
+  rsync -av --delete --exclude='.git' --exclude='marketplace.json' {source}/ {target}/
+  ```
+
+- **Windows git-bash 등 rsync 미설치 환경**: `cp` + `rm` 조합으로 대체. `diff -r` 결과를 기반으로 파일별 처리:
+  ```bash
+  # 예시: cache에만 있는 신규 파일 → 복사
+  cp -r "$CACHE/agents/new-agent.md" "$MARKET/agents/new-agent.md"
+  mkdir -p "$MARKET/rules" && cp "$CACHE/rules/usage.md" "$MARKET/rules/usage.md"
+
+  # 예시: cache에 없고 marketplaces에만 있는 파일 → 삭제
+  rm "$MARKET/scripts/old-script.sh"
+
+  # 예시: 양쪽에 있지만 내용이 다른 파일 → 덮어쓰기
+  cp "$CACHE/hooks.json" "$MARKET/hooks.json"
+  ```
+
+  실행 권한 있는 스크립트 복사 후에는 `chmod +x`를 잊지 말 것.
 
 차이가 없거나 복사 완료 후 2단계로.
 
@@ -130,6 +150,8 @@ sed -i 's/"version": "[^"]*"/"version": "{새 버전}"/' "$MARKET/.claude-plugin
 사용자와 대화하며 확정. 형식 강제하지 않음.
 
 #### 7단계: git commit + push
+
+먼저 upstream에 직접 push 시도:
 ```bash
 cd "$MARKET"
 git add -A
@@ -137,13 +159,115 @@ git commit -m "{확정된 메시지}"
 git push origin main
 ```
 
-**push 충돌 시**:
+**결과에 따라 분기**:
+
+- **성공** → 8단계로 진행
+- **권한 에러 (403 / "permission denied")** → **대체 흐름: Fork + PR**로 전환 (아래 참조). 현재 git 계정이 upstream에 write 권한이 없음을 의미.
+- **push 충돌 (non-fast-forward)**:
+  ```bash
+  git pull --rebase origin main
+  git push origin main
+  ```
+  marketplaces는 일반 git 저장소이므로 rebase 사용 가능. 충돌 해결 불가 시 사용자에게 안내 후 중단.
+
+#### 대체 흐름: Fork + PR (push 권한 없을 때)
+
+`git push origin main`이 `403` 또는 "permission denied"로 실패할 때 이 흐름으로 전환한다.
+
+**원인 진단**:
+- 로컬 git credential helper가 upstream에 write 권한이 없는 계정으로 인증됨
+- 회사 계정으로 개인 저장소에 push 시도 (또는 그 반대)
+- `gh` CLI 계정과 `git` credential 계정이 다름 (display name vs 실제 login)
+
+##### F-1. gh CLI 계정 및 권한 확인
 ```bash
-git pull --rebase origin main
-git push origin main
+gh auth status
+# Logged in to github.com account {GH_USER}
+
+gh api repos/{upstream_owner}/{repo_name} --jq '.permissions' 2>&1
 ```
 
-marketplaces는 일반 git 저장소이므로 rebase 사용 가능. 충돌 해결 불가 시 사용자에게 안내 후 중단.
+- `push: true` 이면 credential helper 갱신만 필요:
+  ```bash
+  gh auth setup-git   # gh의 토큰을 git credential helper로 등록
+  git push origin main
+  ```
+- `push: false` 이면 fork 흐름 사용 (아래 F-2~F-6).
+
+##### F-2. Fork 존재 확인 / 생성
+gh CLI의 display name이 실제 GitHub username과 다를 수 있으므로 실제 username부터 확인:
+```bash
+GH_USER=$(gh api user --jq '.login')
+gh api repos/$GH_USER/{repo_name} --jq '.fork // false' 2>/dev/null
+```
+
+- **이미 fork 있음** → 다음 단계
+- **fork 없음**:
+  ```bash
+  gh repo fork {upstream_owner}/{repo_name} --remote-name=fork --clone=false
+  ```
+
+fork remote가 로컬에 없으면 수동 추가:
+```bash
+git remote add fork https://github.com/$GH_USER/{repo_name}.git
+```
+
+(`gh repo fork`가 "already exists"를 보고하는 경우에도 remote는 추가 안 될 수 있으니 `git remote -v`로 확인하고 수동 추가.)
+
+##### F-3. Feature 브랜치로 push
+**`main`을 직접 덮어쓰지 않는다.** 항상 별도 feature 브랜치 생성:
+```bash
+BRANCH="feat/{변경 요약-kebab-case}"
+git push fork HEAD:$BRANCH
+```
+
+`HEAD:$BRANCH`는 현재 로컬 커밋을 fork 저장소의 새 브랜치로 push한다.
+기존 fork의 main은 건드리지 않으므로 안전.
+
+##### F-4. PR 생성
+```bash
+gh pr create --repo {upstream_owner}/{repo_name} \
+  --base main \
+  --head $GH_USER:$BRANCH \
+  --title "{commit 제목}" \
+  --body "$(cat <<'EOF'
+## Summary
+{변경 요약}
+
+## Why
+{근거}
+
+## Version
+{old} → {new}
+
+## Test plan
+- [ ] ...
+EOF
+)"
+```
+
+PR URL을 사용자에게 전달하고 **merge 요청**.
+
+##### F-5. 사용자 merge 대기
+
+사용자에게 안내:
+> PR 링크: {PR_URL}
+> 브라우저에서 검토 후 merge하시고, 완료되면 알려주세요.
+
+사용자가 "merge 완료"를 알릴 때까지 작업 일시 정지.
+
+##### F-6. merge 후 로컬 동기화 + 재설치
+사용자가 merge 완료를 알리면:
+```bash
+cd "$MARKET"
+git fetch origin
+git merge --ff-only origin/main
+```
+
+`--ff-only`는 non-fast-forward를 거부하므로 안전. 로컬에 추가 커밋이 없다면 항상 성공.
+divergent 상태면 사용자에게 수동 해결 안내 후 중단.
+
+그 다음 8단계(재설치)로 진행.
 
 #### 8단계: 플러그인 재설치 (cache 재구성)
 ```bash
@@ -244,12 +368,17 @@ MAJOR: 구조 변경, 호환성 깨짐
 |--------|------|
 | 플러그인 주 저장소 못 찾음 | 경로 안내 후 중단 |
 | marketplaces가 git 저장소 아님 | `git init` + `git remote add origin` 안내 후 중단 |
-| cache ↔ marketplaces 차이 존재 | 사용자에게 복사 방향 선택권 제시 |
+| cache ↔ marketplaces 차이 존재 | 사용자에게 복사 방향 선택권 제시 (1단계) |
 | 미커밋 변경 없음 + release | "릴리스할 변경이 없습니다" 안내 후 중단 |
 | 존재하지 않는 스킬 edit | "스킬을 찾을 수 없습니다" 안내 |
 | git 미설정 | "git init 먼저 실행하세요" 안내 |
 | GitHub 미연결 | "git remote add origin 먼저 실행하세요" 안내 |
-| push 충돌 | `git pull --rebase origin main` 후 재시도 |
+| **rsync 미설치** (Windows git-bash 등) | `cp` + `rm` 조합으로 대체 (1단계 "OS별 복사 명령" 참조) |
+| **git push 권한 부족 (403)** | `대체 흐름: Fork + PR`로 자동 전환 (7단계 참조) |
+| **gh CLI 계정과 upstream 소유자 불일치** | `gh api user --jq '.login'`로 실제 username 확인 후 fork 흐름 사용 |
+| **기존 fork 존재** | `gh repo fork`가 "already exists" 알림 — remote가 자동 추가되지 않으므로 수동 `git remote add fork ...` 필요 |
+| push 충돌 (non-fast-forward) | `git pull --rebase origin main` 후 재시도 |
+| **`git reset --hard` 등 hook에 의해 차단** | `git merge --ff-only origin/main` 또는 `git checkout -B main origin/main`로 대체 |
 | `claude plugin` 커맨드 실행 실패 | 사용자에게 수동 실행 안내 |
 
 ## 경계
@@ -259,6 +388,7 @@ MAJOR: 구조 변경, 호환성 깨짐
 - plugin.json 버전 업데이트
 - cache ↔ marketplaces 파일 동기화 (복구 경로)
 - marketplaces에서 git commit + push
+- **Fork + PR 흐름으로 대체 배포** (push 권한 없을 때)
 - 플러그인 재설치 (cache 재구성)
 - 플러그인 상태 확인
 
@@ -268,3 +398,4 @@ MAJOR: 구조 변경, 호환성 깨짐
 - GitHub 리포 생성 (이미 있어야 함)
 - 마켓플레이스 등록 (수동으로 해야 함)
 - cache 직접 편집 (예외: 복구 경로)
+- fork의 main 직접 덮어쓰기 (항상 feature 브랜치 사용)
