@@ -60,8 +60,22 @@
 | "기본브랜치 최신", "dev 반영", "최신 받아줘" | `/ft:pull` |
 | "릴리스해줘", "main 배포" | `/ft:release` |
 
+### feature-writer vs /ft:build 사용 기준
+
+| 기준 | feature-writer (에이전트) | /ft:build (커맨드) |
+|------|--------------------------|-------------------|
+| 호출 | Claude 자동 위임 | 사용자 명시 호출만 |
+| 규모 | 1~5 파일 | 제한 없음 |
+| learnings | 읽기 | 읽기 + 쓰기 |
+| Feature.md 검증 | 갱신만 | 코드↔Feature.md 정밀 대조 |
+| 리뷰 연계 | 3파일+ 시 제안 | --review로 자동 실행 |
+| 가이드 스킬 체크 | 안 함 | 함 |
+
+- "구현해줘", "만들어줘" → `feature-writer`
+- `/ft:build` 명시 호출 → `ft:build`
+- 새 피처 전체 구현 → `/ft:build` 추천
+
 ### 참고
-- `/ft:build`는 **사용자가 명시적으로 호출할 때만** 사용. 자동 구현 요청은 `feature-writer` 에이전트로 위임한다.
 - `/ft:dev`, `/ft:pkg-*`, `/ft:skill-scan`은 플러그인 개발자용이므로 일반 대화에서는 호출하지 않는다.
 
 ---
