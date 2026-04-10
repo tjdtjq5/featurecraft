@@ -193,6 +193,14 @@ stable
 - `/ft:build` 완료 후 Feature.md가 업데이트되었을 때
 
 ### 갱신 방법
+
+**FEATURE_INDEX.md가 이미 있으면** (증분 갱신):
+1. 기존 구조(카테고리, 순서, 설명 형식)를 유지한다
+2. 새로 등록된 피처만 적절한 카테고리에 추가한다
+3. 삭제된 피처(Feature.md가 없어진 것)는 제거한다
+4. 카테고리가 불분명하면 → 마지막에 "미분류" 섹션에 추가
+
+**FEATURE_INDEX.md가 없으면** (신규 생성):
 1. 프로젝트 내 모든 `**/Feature.md` 검색 (Glob)
 2. 각 Feature.md에서 피처명, 상태, API 목록 추출
 3. 테이블로 정리하여 `.featurecraft/FEATURE_INDEX.md`에 저장

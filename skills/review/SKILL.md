@@ -41,6 +41,7 @@ description: "코드 리뷰 — 변경된 코드의 품질, 버그, 프로젝트
 ```
 .claude/rules/*.md          ← forbidden-patterns, architecture-rules 등
 CLAUDE.md                   ← Forbidden Patterns 섹션
+.featurecraft/learnings/*.md ← 프로젝트 특유의 패턴/주의사항
 ```
 
 **로딩 우선순위**: `.claude/rules/` 폴더가 있으면 그 안의 파일들을 읽는다. 없으면 `CLAUDE.md`의 금지 패턴 섹션을 참조한다.

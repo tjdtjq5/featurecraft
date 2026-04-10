@@ -21,6 +21,7 @@ tools: ["Read", "Grep", "Glob", "Bash", "Write", "Edit"]
 2. 작업 대상 피처의 **Feature.md** — 용도/의존성/구조/API/주의사항
 3. Feature.md의 **의존성 섹션**에 적힌 다른 피처의 Feature.md (1단계 깊이만)
 4. 의존 피처의 API 섹션에 적힌 **실제 소스 파일** (시그니처 확인)
+5. `.featurecraft/learnings/*.md` — 프로젝트 특유의 패턴/주의사항 (있으면)
 
 **중복 읽기 방지**: 같은 대화에서 이미 읽은 파일은 다시 읽지 않는다.
 
