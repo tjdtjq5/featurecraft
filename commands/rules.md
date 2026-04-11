@@ -1,18 +1,18 @@
 ---
 name: "ft:rules"
-description: "프로젝트 규칙 관리 — 프로젝트 고유 규칙을 rules/ 폴더에 구조화된 md로 생성·갱신하고, 세션 시작 훅으로 자동 주입되게 설정한다. init(최초 설정), scan(분석 후 갱신 제안), add(개별 규칙 추가), list(현황) 네 모드. '규칙 만들어줘', '프로젝트 규칙 정리', 'rules 초기화', '훅 설정해줘' 같은 요청이 오면 이 커맨드를 사용한다."
+description: "프로젝트 규칙 관리 — 프로젝트 고유 규칙을 rules/ 폴더에 구조화된 md로 생성·갱신하고, 세션 시작 훅으로 인덱스가 자동 주입되게 설정한다. init(최초 설정), scan(분석 후 갱신 제안), add(개별 규칙 추가), list(현황) 네 모드. '규칙 만들어줘', '프로젝트 규칙 정리', 'rules 초기화', '훅 설정해줘' 같은 요청이 오면 이 커맨드를 사용한다."
 ---
 
 # /ft:rules — 프로젝트 규칙 관리
 
-프로젝트별 고유 규칙(아키텍처, 금지 패턴, 리뷰/감사용 규칙, 경험 기록)을 `rules/` 폴더에 구조화된 md 파일로 관리한다. 세션 시작 훅으로 매 대화에 주입되므로 **작성 단계부터 Claude가 규칙을 인지**한다.
+프로젝트별 고유 규칙(아키텍처, 금지 패턴, 리뷰/감사용 규칙, 경험 기록)을 `rules/` 폴더에 구조화된 md 파일로 관리한다. 세션 시작 훅으로 **규칙 인덱스(ID + 강도)** 가 매 대화에 주입되므로 **작성 단계부터 Claude가 규칙의 존재를 인지**하고, 필요 시 해당 파일을 Read로 상세 참조한다.
 
 ## 왜 이 커맨드가 필요한가
 
 1. **CLAUDE.md 산만함** — 프로젝트 규칙이 CLAUDE.md 한 파일에 섞여 있어 참조가 어렵다. 목적별 분리 필요.
 2. **스킬 간 규칙 소스 공유** — `ft:review`, `ft:audit`이 규칙 파일을 기대하는데 수동으로 만들면 빠뜨리기 쉽다.
 3. **훅 설정 자동화** — 매 세션 훅 설정을 사용자가 직접 `.claude/settings.json`에 쓰는 건 비효율. 커맨드가 자동 등록.
-4. **작성 단계 인지** — 세션 시작 훅으로 규칙이 컨텍스트에 들어가면 **코드를 쓰기 전에** 규칙을 본다. 리뷰(`ft:review`)나 감사(`ft:audit`)에서 **잡기 전에 예방**.
+4. **작성 단계 인지 (인덱스 방식)** — 세션 시작 훅이 **규칙 인덱스**(ID + 강도)를 stdout으로 주입. Claude는 "이 프로젝트에 `find-object` MUST 금지가 있다"를 코드 작성 전에 인지하고, 구체 Why/대안/예외가 필요하면 해당 `rules/*.md`만 on-demand Read. 리뷰(`ft:review`)나 감사(`ft:audit`)에서 **잡기 전에 예방**.
 
 ## 4개 모드
 
@@ -27,15 +27,21 @@ description: "프로젝트 규칙 관리 — 프로젝트 고유 규칙을 rules
 
 5개 파일로 분리한다. **각 파일 200줄 이내 유지**가 원칙. 초과하면 경고 + 분할 제안.
 
-| 파일 | 역할 | 누가 읽음 |
-|------|------|----------|
-| `architecture.md` | 레이어 방향, DI 규칙, MB/ECS 경계, 네임스페이스 — **큰 골격** | 세션 훅 (Always) |
-| `forbidden.md` | 금지 API, 금지 패턴 — **빨간불 목록** | 세션 훅 (Always) |
-| `audit-rules.md` | `ft:audit` 특화 체크, 예외/면제, 임계값 재정의 | `ft:audit` |
-| `review-rules.md` | `ft:review` 특화 금지 패턴 + 대안 코드 | `ft:review` |
-| `learnings.md` | 과거 사례 기록 ("이렇게 해서 버그났다") | 세션 훅 (Always) |
+| 파일 | 역할 | 훅 주입 | 전문 읽음 |
+|------|------|---------|----------|
+| `architecture.md` | 레이어 방향, DI 규칙, MB/ECS 경계, 네임스페이스 — **큰 골격** | 인덱스 | on-demand Read, `ft:audit`, `ft:review` |
+| `forbidden.md` | 금지 API, 금지 패턴 — **빨간불 목록** | 인덱스 | on-demand Read, `ft:review` |
+| `audit-rules.md` | `ft:audit` 특화 체크, 예외/면제, 임계값 재정의 | 인덱스 | `ft:audit` |
+| `review-rules.md` | `ft:review` 특화 금지 패턴 + 대안 코드 | 인덱스 | `ft:review` |
+| `learnings.md` | 과거 사례 기록 ("이렇게 해서 버그났다") | 인덱스 | on-demand Read |
 
-**세션 훅은 `rules/` 전체를 주입**한다 (결정 C-3). INDEX 분리 없이 5개 파일 모두. 그래서 **각 파일을 작게 유지**하는 것이 핵심 제약이다.
+**세션 훅은 `rules/`의 인덱스(각 규칙의 ID + 강도)만 주입**한다 (결정 C-4). 규칙 본문은 주입 안 함.
+
+> **왜 인덱스만?** harness는 hook stdout이 일정 크기(~4–8KB)를 넘으면 전체 출력을 파일로 저장하고 preview(2KB)만 컨텍스트에 주입한다. 규칙 전문을 모두 주입하려 하면 파일 몇 개를 지나는 순간 truncate되어, 결과적으로 주입이 **실패**한다. 인덱스는 규칙 50개 기준 ~1.5KB로 항상 안전.
+>
+> **인덱스만으로 충분한가?** Claude는 인덱스를 보고 "이 프로젝트에 `find-object` MUST 금지 규칙이 있다"는 존재를 인지한다. 코드 작성 중 해당 영역을 건드리면 Read로 상세(Why/대안/예외)를 로드. 리뷰/감사 스킬은 어차피 자기 파일을 직접 Read하므로 영향 없음.
+
+그래서 **각 파일을 작게 유지**하는 것은 여전히 중요하다 — 인덱스는 주입되지만, Claude가 실제로 Read할 때 파일 자체가 거대하면 토큰 낭비.
 
 ## 규칙 포맷 (D 포맷)
 
@@ -192,7 +198,9 @@ git log의 `fix:` / `refactor:` 커밋 중 중요한 것 1~3개를 사례로 기
 - wave-manager-monolith (2026-03)
 - spatial-hash-gc-burst (2026-01)
 
-### 전체: 5파일, 548줄 (훅 주입 시 약 12K 토큰)
+### 전체: 5파일, 548줄
+- 파일 전문 총량: ~15KB (on-demand Read용)
+- 훅 인덱스 크기: ~1.5KB (50 규칙 기준, 세션 시작 시 주입)
 ```
 
 ### 5단계: 사용자 검토 대화
@@ -244,16 +252,24 @@ fi
   "hooks": [
     {
       "type": "command",
-      "command": "find rules -name '*.md' -type f 2>/dev/null | xargs cat 2>/dev/null"
+      "command": "echo '=== rules/ Index (on-demand Read for details) ==='; for f in rules/*.md; do [ -f \"$f\" ] || continue; echo; echo \"### $f\"; grep '^## [a-z]' \"$f\" | sed 's/^## /- /'; done 2>/dev/null"
     }
   ]
 }
 ```
 
 **명령 선택 근거**:
-- `find ... | xargs cat`이 Windows bash / macOS / Linux 모두에서 동작
-- `cat rules/*.md`는 glob 확장이 안정적이지 않을 수 있음 (특히 파일 없을 때)
-- `2>/dev/null`로 에러 무시 (rules/ 없을 때도 세션 시작이 막히면 안 됨)
+- **인덱스만 출력** — 각 파일에서 `^## {id}  [강도]` 라인만 뽑아서 `- {id}  [강도]` 형태로 출력. 규칙 50개 기준 ~1.5KB로, harness stdout limit 대비 안전 마진 충분.
+- **Header 라인** (`=== rules/ Index ... ===`) — Claude가 "이건 인덱스다, 상세는 Read 필요"를 명확히 인지하게.
+- **파일별 섹션** (`### rules/<파일>`) — 규칙이 어느 파일에 있는지 표시 → Claude가 해당 파일만 정확히 Read 가능.
+- **크로스 플랫폼** — `for f in`, `[ -f ]`, `grep`, `sed`는 POSIX shell 기본. Windows git-bash / macOS / Linux 모두 동작.
+- **`2>/dev/null`** — `rules/` 없거나 파일 0개여도 세션 시작이 막히면 안 됨.
+
+**레거시 훅 감지 (상향 마이그레이션)**:
+이전 버전 ft:rules(v0.12.0 이하)는 `find rules -name '*.md' -type f 2>/dev/null | xargs cat 2>/dev/null` 형태로 전체 파일을 cat하던 훅을 등록했다. harness stdout limit 때문에 truncate되어 실패하는 케이스. 이 레거시 커맨드가 `hooks.SessionStart`에 있으면:
+1. 사용자에게 "레거시 훅(전체 cat) 발견 — 인덱스 방식으로 교체할까요? (y/n)" 질문
+2. y → 레거시 커맨드를 배열에서 제거하고 새 인덱스 커맨드 추가
+3. n → 중복 등록 회피를 위해 새 커맨드 추가하지 않고 경고만 남김
 
 **이미 등록돼 있으면 skip**. 중복 체크는 command 문자열 일치로 판정.
 
@@ -267,7 +283,7 @@ fi
         "hooks": [
           {
             "type": "command",
-            "command": "find rules -name '*.md' -type f 2>/dev/null | xargs cat 2>/dev/null"
+            "command": "echo '=== rules/ Index (on-demand Read for details) ==='; for f in rules/*.md; do [ -f \"$f\" ] || continue; echo; echo \"### $f\"; grep '^## [a-z]' \"$f\" | sed 's/^## /- /'; done 2>/dev/null"
           }
         ]
       }
@@ -288,6 +304,17 @@ fi
 2. **파싱 검증**: 각 파일을 Read해서 D 포맷 파싱 테스트 (ID 중복 검사, 강도 태그 누락 검사)
 3. **훅 등록 확인**: settings.json에 훅 항목이 있는지 재확인
 4. **크기 체크**: 각 파일 200줄 이내인지 재확인
+5. **인덱스 주입 실측**: 훅 커맨드를 실제로 실행하여 stdout 크기가 4KB 이하인지 확인 (harness limit 안전 마진):
+   ```bash
+   OUTPUT=$(echo '=== rules/ Index (on-demand Read for details) ==='; for f in rules/*.md; do [ -f "$f" ] || continue; echo; echo "### $f"; grep '^## [a-z]' "$f" | sed 's/^## /- /'; done 2>/dev/null)
+   SIZE=$(echo -n "$OUTPUT" | wc -c)
+   if [ "$SIZE" -gt 4096 ]; then
+     echo "⚠️ 인덱스 크기 ${SIZE}B — 4KB 초과 (규칙이 너무 많음)"
+   else
+     echo "✓ 인덱스 크기 ${SIZE}B (안전)"
+   fi
+   ```
+   4KB 초과 시 경고 + "규칙 수 줄이기 / 파일 분할 검토" 안내.
 
 ### 9단계: 완료 안내
 
@@ -302,11 +329,13 @@ fi
   - rules/learnings.md      (2 사례, 45줄)
 
 훅 등록:
-  - .claude/settings.json에 SessionStart 훅 추가 완료
+  - .claude/settings.json에 SessionStart 훅 추가 완료 (인덱스 방식)
+  - 주입 예상 크기: 1,487 B (안전)
 
 다음 단계:
-  - 새 세션을 시작하면 rules/가 자동으로 주입됩니다
-  - 현재 세션에서 즉시 반영하려면 수동으로 Read 하거나 세션 재시작
+  - 새 세션을 시작하면 rules/ 인덱스(ID + 강도)가 자동으로 주입됩니다
+  - 구체 Why/대안/예외는 Claude가 필요 시 해당 rules/*.md를 Read
+  - 현재 세션에서 즉시 반영하려면 수동으로 인덱스 로드 또는 세션 재시작
   - 규칙 추가: /ft:rules add forbidden new-rule-id
   - 규칙 목록 확인: /ft:rules list
 ```
@@ -466,8 +495,8 @@ forbidden.md:
 ...
 
 ### 훅 상태
-✓ .claude/settings.json에 SessionStart 훅 등록됨
-  명령: find rules -name '*.md' -type f 2>/dev/null | xargs cat 2>/dev/null
+✓ .claude/settings.json에 SessionStart 훅 등록됨 (인덱스 방식)
+  인덱스 크기: 1,487 B (안전, ≤ 4KB)
 
 ### 경고
 (없음)
@@ -478,6 +507,8 @@ forbidden.md:
 - 중복 ID
 - D 포맷 위반 규칙 (예: 강도 태그 누락)
 - 훅 미등록
+- **레거시 훅 등록됨** (전체 cat 방식 → 인덱스 방식으로 교체 제안)
+- **인덱스 출력 크기 > 4KB** (harness limit 접근 경고)
 - `rules/` 폴더는 있지만 파일 없음
 
 ---
@@ -487,19 +518,36 @@ forbidden.md:
 ### 왜 SessionStart 훅인가
 
 - 세션 시작 시점에 stdout이 **additional context**로 주입됨
-- 매 대화 시작마다 규칙이 Claude 컨텍스트에 들어감
+- 매 대화 시작마다 규칙 인덱스가 Claude 컨텍스트에 들어감
 - 작성 단계부터 인지 → `ft:review`/`ft:audit`으로 잡기 **전에** 예방
+
+### 왜 인덱스 방식인가 (결정 C-4)
+
+이전 버전(~0.12.0)은 훅이 `find rules -name '*.md' | xargs cat`으로 **파일 전체**를 stdout으로 내보냈다. 하지만:
+
+- harness는 hook stdout이 일정 크기(~4–8KB)를 넘으면 전체를 파일로 저장하고 **preview 2KB만** 컨텍스트에 주입
+- 규칙 5파일(총 ~15KB)이면 architecture.md 앞부분만 로드, 나머지는 실질적으로 **미주입**
+- 결과적으로 스킬의 핵심 가치("작성 단계 인지")가 실패
+
+**해결**: 훅이 각 규칙의 **ID + 강도**만 한 줄씩 내보낸다. 규칙 50개 기준 ~1.5KB로 항상 안전. 상세 Why/대안/예외는 Claude가 필요할 때 해당 파일만 Read.
 
 ### 명령 선택 이유
 
 ```bash
-find rules -name '*.md' -type f 2>/dev/null | xargs cat 2>/dev/null
+echo '=== rules/ Index (on-demand Read for details) ==='
+for f in rules/*.md; do
+  [ -f "$f" ] || continue
+  echo
+  echo "### $f"
+  grep '^## [a-z]' "$f" | sed 's/^## /- /'
+done 2>/dev/null
 ```
 
-- `find`: 크로스 플랫폼 안정적. Windows git-bash / macOS / Linux 전부 동일 동작.
-- `cat rules/*.md`는 glob 확장이 shell에 따라 다르고, 파일 없을 때 "no match" 에러 발생 가능.
-- `xargs cat`: 한 번에 모든 파일 내용 출력.
-- `2>/dev/null`: `rules/` 없거나 파일 없어도 세션 시작이 막히면 안 되므로 에러 무시.
+- **`grep '^## [a-z]'`**: D 포맷의 규칙 헤더(`## id  [MUST]`)만 매칭. 섹션 헤더(`## 모드 1: ...`)는 대문자/숫자라서 자동 제외.
+- **`sed 's/^## /- /'`**: 리스트 마커로 변환. Claude가 인덱스임을 시각적으로 인지.
+- **파일별 섹션(`### $f`)**: 규칙이 어느 파일에 있는지 표시 → Claude가 정확히 해당 파일만 Read 가능.
+- **`for f in ... do [ -f ]`**: `rules/` 없거나 파일 0개여도 literal glob 에러 없이 정상 종료.
+- **`2>/dev/null`**: 에러 억제 — 세션 시작이 어떤 상황에서도 막히면 안 됨.
 
 ### 병합 전략
 
@@ -507,11 +555,12 @@ find rules -name '*.md' -type f 2>/dev/null | xargs cat 2>/dev/null
 
 1. **Read** → JSON 파싱
 2. `hooks.SessionStart`가 배열이면 그대로 유지, 아니면 새 배열
-3. 새 항목 (위 명령)이 **이미 같은 command로 등록됐는지 검사**
-4. 미등록이면 배열에 push
-5. **Write**로 저장
+3. **레거시 훅 감지** — `find rules -name '*.md' -type f 2>/dev/null | xargs cat 2>/dev/null` 또는 유사 cat 계열 훅이 있으면 사용자에게 교체 제안
+4. 새 항목 (인덱스 명령)이 **이미 같은 command로 등록됐는지 검사**
+5. 미등록이면 배열에 push (레거시 교체 승인 시 레거시 제거와 동시에)
+6. **Write**로 저장
 
-**중복 판정**: command 문자열 완전 일치로. 유사하지만 다른 훅(예: `cat rules/*.md`)은 별개 항목으로 취급.
+**중복 판정**: command 문자열 완전 일치로. 유사하지만 다른 훅은 별개 항목으로 취급.
 
 ### 수동 복원
 
@@ -522,7 +571,7 @@ find rules -name '*.md' -type f 2>/dev/null | xargs cat 2>/dev/null
   "hooks": [
     {
       "type": "command",
-      "command": "find rules -name '*.md' -type f 2>/dev/null | xargs cat 2>/dev/null"
+      "command": "echo '=== rules/ Index (on-demand Read for details) ==='; for f in rules/*.md; do [ -f \"$f\" ] || continue; echo; echo \"### $f\"; grep '^## [a-z]' \"$f\" | sed 's/^## /- /'; done 2>/dev/null"
     }
   ]
 }
@@ -532,12 +581,25 @@ find rules -name '*.md' -type f 2>/dev/null | xargs cat 2>/dev/null
 
 ## 파일 크기 제약
 
+### 파일 본문 (on-demand Read 대상)
+
 | 상황 | 처리 |
 |------|------|
 | 단일 파일 ≤ 200줄 | ✓ OK |
-| 단일 파일 > 200줄 | ⚠️ 경고 + 분할 제안 |
+| 단일 파일 > 200줄 | ⚠️ 경고 + 분할 제안 (Read 시 토큰 낭비) |
 | 단일 파일 > 300줄 | ⛔ `add` 모드에서 추가 차단, 분할 먼저 요구 |
-| 전체 합 > 1000줄 | ⚠️ 토큰 주의 경고 (매 세션 ~20K 토큰) |
+| 전체 합 > 1000줄 | ⚠️ 과도 경고 (on-demand Read 빈도 낮아짐) |
+
+### 인덱스 (훅 주입 대상)
+
+| 상황 | 처리 |
+|------|------|
+| 인덱스 출력 ≤ 2KB | ✓ 여유 (~70 규칙까지) |
+| 인덱스 출력 ≤ 4KB | ✓ OK (~130 규칙까지) |
+| 인덱스 출력 > 4KB | ⚠️ harness limit 접근 경고, 규칙 수 줄이기 검토 |
+| 인덱스 출력 > 6KB | ⛔ 실질 truncate 위험, 필수 감축 |
+
+**계산**: 규칙 1개당 인덱스 ~30 bytes (`- mcp-unity-tool  [MUST]` 수준). 50 규칙 = ~1.5KB.
 
 ### 분할 제안 예시
 
@@ -566,6 +628,9 @@ find rules -name '*.md' -type f 2>/dev/null | xargs cat 2>/dev/null
 | `rules/` 이미 존재 (init 시) | 덮어쓰기/병합/취소 질문 |
 | `.claude/settings.json` 존재하지만 파싱 실패 | 사용자에게 "직접 수정 후 재시도" 안내 |
 | 기존 SessionStart 훅과 충돌 | 배열에 append (덮어쓰지 않음) |
+| **레거시 훅 등록됨** (`find ... xargs cat`) | 교체 제안 → 승인 시 레거시 제거 후 인덱스 커맨드 등록 |
+| **인덱스 출력 > 4KB** (규칙 과다) | 경고 + 규칙 수 줄이기 / 파일 분할 제안 |
+| **인덱스 출력 > 6KB** | 필수 감축 — 이대로면 harness truncate로 주입 실패 |
 | `CLAUDE.md` 없음 | 분석 소스에서 skip, Feature.md/git log에만 의존 |
 | Feature.md가 하나도 없음 | architecture.md 초안이 빈약해질 수 있음 → 경고 |
 | git 저장소 아님 | git log skip, "learnings 초안은 수동 작성 필요" 안내 |
@@ -586,16 +651,20 @@ find rules -name '*.md' -type f 2>/dev/null | xargs cat 2>/dev/null
 - `rules/` 폴더 생성 및 5개 파일 초안 자동 분석·생성
 - `CLAUDE.md` / 로드맵 / Feature.md / git log 분석 기반 초안
 - D 포맷 강제 (ID + 강도 + 원칙 + Why + 대안 + 예외)
-- `.claude/settings.json`에 SessionStart 훅 등록 (없으면 생성, 있으면 병합)
+- `.claude/settings.json`에 SessionStart **인덱스 훅** 등록 (없으면 생성, 있으면 병합)
+- **레거시 훅(전체 cat) 감지 시 교체 제안**
+- **인덱스 출력 크기 실측 및 4KB 초과 경고**
 - 파일 크기 200줄 상한 경고 + 분할 제안
 - 규칙 추가/갱신/현황 표시 (init/scan/add/list)
 - 중복 ID 감지, D 포맷 검증
 
 **안한다:**
 - 기존 `.claude/settings.json`의 다른 훅/설정 덮어쓰기 (병합만)
+- **레거시 훅을 사용자 승인 없이 제거** (항상 교체 여부 질문)
 - 사용자 확인 없이 초안 저장 (항상 검토 단계 거침)
 - 규칙 내용을 코드 수정으로 연결 (`ft:audit`/`ft:review` 영역)
 - 규칙 위반 코드 자동 수정
 - 기존 ID 임의 변경 (참조 깨뜨림)
+- **훅에 규칙 본문 전체를 주입** (harness stdout limit으로 truncate됨 — 인덱스만 주입)
 - `rules/` 바깥 파일 생성
 - 프로젝트 루트가 아닌 곳에서 실행 (안전장치)
