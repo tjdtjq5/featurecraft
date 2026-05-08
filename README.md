@@ -41,6 +41,7 @@ claude plugin install ft
 | **메타** | `/ft:dev` | ft 자체 수정/배포 |
 | | `/ft:rules` | 프로젝트 룰 관리 + 훅 등록 |
 | | `/ft:skill-creator-project` | 프로젝트 전용 가이드 스킬 생성 |
+| | `/ft:setup` | Claude Code 필수 외부 도구 자동 셋업 |
 | **설계** | `/ft:design` | 설계 대화 (저장 X) |
 
 ## 핵심 개념
