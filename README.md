@@ -1,22 +1,31 @@
 # ft (FeatureCraft)
 
-AI 코드 워크플로 플러그인. **핀포인트 명령은 스킬로**, **코드 본문 작업은 에이전트로** 깔끔하게 분리한 도구 모음.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/version-0.16.0-blue.svg)](https://github.com/tjdtjq5/featurecraft/releases)
+
+> AI 코드 워크플로 Claude Code 플러그인.
+> **핀포인트 명령은 스킬로**, **코드 본문 작업은 에이전트로** 깔끔하게 분리한 도구 모음.
 
 ## 해결하는 문제
 
-> Claude는 코드를 작성할 때 기존 API를 무시하고 자기 방식으로 새로 만든다.
-> 그리고 매번 사용자가 워크플로(커밋 → PR → 머지, 패키지 배포 등)를 직접 챙겨야 한다.
+Claude는 코드를 작성할 때 기존 API를 무시하고 자기 방식으로 새로 만든다.
+그리고 매번 사용자가 워크플로(커밋 → PR → 머지, 패키지 배포 등)를 직접 챙겨야 한다.
 
 ft는 두 가지로 답한다:
 1. **에이전트 3개**가 코드 사실(cwm-roslyn-navigator MCP)과 자동 컨텍스트(메모리·룰)를 결합해 코드 작성/디버그/감사를 자동화.
-2. **스킬 10개**가 Git/패키지/메타 작업의 정해진 절차를 1회 호출로 처리.
+2. **스킬 11개**가 Git/패키지/메타 작업의 정해진 절차를 1회 호출로 처리.
 
 ## 설치
 
 ```bash
-claude plugin marketplace add github:tjdtj/featurecraft
-claude plugin install ft
+# 마켓플레이스 등록
+claude plugin marketplace add github:tjdtjq5/featurecraft
+
+# ft 플러그인 설치
+claude plugin install ft@featurecraft
 ```
+
+설치 후 `/ft:setup`을 호출해 필수 외부 도구 (uloop-cli, context-mode, CWM.RoslynNavigator) 설치 여부를 검증/자동 설치할 수 있다.
 
 ## 도구 한눈에 보기
 
@@ -118,6 +127,11 @@ code-writer (자동 발동)
 - 12체크리스트 감사
 - Unity 예외 해석 (Authoring/Bridge/Bootstrap/ECS)
 
+## 이슈 / 기여
+
+- **버그 리포트 / 기능 제안**: [github.com/tjdtjq5/featurecraft/issues](https://github.com/tjdtjq5/featurecraft/issues)
+- **PR 환영**: 이슈에서 먼저 합의 후 PR 권장
+
 ## 라이센스
 
-MIT
+[MIT](LICENSE)
