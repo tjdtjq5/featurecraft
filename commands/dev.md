@@ -37,7 +37,7 @@ ft 플러그인은 두 경로에 존재한다:
 
 ### 모드 1: 스킬/커맨드/에이전트 수정
 ```
-/ft:dev edit build
+/ft:dev edit push
 ```
 
 1. 플러그인 주 저장소 찾기 (`~/.claude/plugins/marketplaces/{marketplace}/`)
@@ -324,19 +324,15 @@ claude plugin install {plugin}@{marketplace}
 ├── .claude-plugin/
 │   ├── plugin.json          ← 버전 관리
 │   └── marketplace.json     ← 마켓플레이스 메타
-├── agents/                  ← Claude가 위임하는 전문 실행기
-│   ├── feature-explore.md
-│   └── feature-writer.md
-├── rules/                   ← 세션 로드 컨텍스트 (훅으로 주입)
+├── agents/                  ← Claude가 위임하는 전문 실행기 (자동 발동)
+│   ├── code-writer.md
+│   ├── code-diagnose.md
+│   └── code-auditor.md
+├── rules/                   ← 사용 가이드
 │   └── usage.md
-├── skills/                  ← 자동 발동 OK (읽기/분석)
-│   ├── scan/SKILL.md
-│   ├── review/SKILL.md
-│   ├── roadmap/SKILL.md
-│   ├── design/SKILL.md
-│   └── skill-scan/SKILL.md
-├── commands/                ← 명시적 호출만 (쓰기/Git)
-│   ├── build.md
+├── skills/                  ← 자동 발동 OK
+│   └── design/SKILL.md
+├── commands/                ← 명시적 호출만 (쓰기/Git/메타)
 │   ├── push.md
 │   ├── pull.md
 │   ├── release.md
@@ -344,10 +340,9 @@ claude plugin install {plugin}@{marketplace}
 │   ├── pkg-dev.md
 │   ├── pkg-list.md
 │   ├── pkg-publish.md
+│   ├── design.md
+│   ├── rules.md
 │   └── skill-creator-project.md
-├── scripts/                 ← 훅 스크립트
-│   └── inject-ft-context.sh
-├── hooks.json               ← 훅 등록
 ├── README.md
 └── LICENSE
 ```

@@ -67,7 +67,7 @@ unity-packages 레포의 대상 폴더를 검증한다.
 
 **복사 규칙:**
 - .cs, .asmdef, .meta, .md, .json, .asset 파일만 복사
-- .obsidian/, Feature.md는 제외 (개발용)
+- `.obsidian/` 같은 개발용 디렉토리는 제외
 - 기존 파일은 덮어쓰기
 
 ### 3단계: 버전 범프
@@ -85,12 +85,15 @@ CHANGELOG.md 상단에 새 버전 엔트리 추가:
 
 ### 4.5단계: README.md 최신화
 
-README.md를 현재 패키지 상태에 맞게 갱신한다:
-- Feature.md 또는 package.json에서 컴포넌트/API 목록 수집
-- 설치 URL의 버전 태그를 새 버전으로 업데이트
-- 의존성 목록 갱신
-- 삭제된 기능 제거, 추가된 기능 반영
-- Breaking Changes가 있으면 별도 섹션 추가
+README.md의 자동 갱신 범위는 좁게 — 외부 사용자가 읽는 문서라 잘못 갱신하면 위험.
+
+- **자동 갱신**:
+  - 설치 URL의 버전 태그를 새 버전으로 업데이트
+  - package.json의 description 변경 시 README의 1줄 요약도 동기화
+  - 의존성 목록(package.json `dependencies`)이 바뀌었으면 갱신
+- **수동(사용자가 직접)**:
+  - 컴포넌트/API 목록 — 자동 추출은 부정확하므로 사용자가 작성
+  - Breaking Changes — 별도 섹션 직접 추가
 
 ### 4.7단계: 모노레포 루트 README.md 갱신
 
