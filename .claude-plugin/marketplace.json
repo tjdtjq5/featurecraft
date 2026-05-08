@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "featurecraft",
-  "description": "Feature-driven development plugin. Structures projects into feature units with Feature.md-based dependency chaining.",
+  "description": "AI code workflow plugin. Pinpoint skills + auto-invoking code agents.",
   "owner": {
     "name": "tjdtj",
     "email": "tjdtjq5@naver.com"
@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "ft",
-      "description": "Feature-driven development plugin. Structures projects into feature units with Feature.md-based dependency chaining, ensuring Claude references existing code instead of reinventing it.",
+      "description": "AI code workflow plugin. Pinpoint skills for Git/package/meta operations + auto-invoking agents for code writing, diagnosis, and structural audit. Integrates with cwm-roslyn-navigator MCP.",
       "category": "development",
       "source": "./"
     }

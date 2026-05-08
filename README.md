@@ -1,149 +1,121 @@
 # ft (FeatureCraft)
 
-Claude가 기존 코드를 참고하면서 피처 단위로 구조화된 개발을 하도록 만드는 플러그인.
+AI 코드 워크플로 플러그인. **핀포인트 명령은 스킬로**, **코드 본문 작업은 에이전트로** 깔끔하게 분리한 도구 모음.
 
 ## 해결하는 문제
 
-> Claude는 기존에 만들어진 기능을 참고하지 않고 자기 방식으로 새로 만든다.
-> 예: 바인딩 기능이 있는데도 그걸 사용하지 않고 UI를 새로 구현함.
+> Claude는 코드를 작성할 때 기존 API를 무시하고 자기 방식으로 새로 만든다.
+> 그리고 매번 사용자가 워크플로(커밋 → PR → 머지, 패키지 배포 등)를 직접 챙겨야 한다.
 
-ft는 Feature.md 기반 의존성 체이닝으로 이 문제를 해결합니다.
+ft는 두 가지로 답한다:
+1. **에이전트 3개**가 코드 사실(cwm-roslyn-navigator MCP)과 자동 컨텍스트(메모리·룰)를 결합해 코드 작성/디버그/감사를 자동화.
+2. **스킬 10개**가 Git/패키지/메타 작업의 정해진 절차를 1회 호출로 처리.
 
 ## 설치
 
 ```bash
-claude plugin marketplace add github:{owner}/featurecraft
+claude plugin marketplace add github:tjdtj/featurecraft
 claude plugin install ft
 ```
 
-## 빠른 시작
+## 도구 한눈에 보기
 
-### 새 프로젝트
-```
-/ft:roadmap 인벤토리 시스템    → Feature.md 생성 (1개~N개)
-/ft:build                     → 코드 구현 (기존 피처 API 자동 참조)
-/ft:review                    → 코드 리뷰
-/ft:push                      → 커밋 → PR → 머지
-```
+### 에이전트 — 자동 발동 (코드 본문 작업)
 
-### 기존 프로젝트
-```
-/ft:scan                      → 프로젝트 분석 + 피처 분류 리포트
-/ft:scan InGame/Inventory     → 해당 폴더를 피처로 등록 (Feature.md 역생성)
-```
+| 에이전트 | 역할 | 자동 발동 키워드 |
+|---------|------|------------------|
+| `code-writer` | 코드 작성/수정. 7원칙. cwm으로 기존 API 정확 파악 | "구현해줘", "만들어줘", "수정해줘" |
+| `code-diagnose` | 버그 근본 원인 추적. 증거 기반. 해결 옵션 비교 | "왜 안돼", "원인 분석", "진단해줘" |
+| `code-auditor` | 구조 감사. 12체크리스트 + Unity 예외 해석 | "감사해줘", "구조 점검", "건강도" |
 
-## 명령어 (8개)
+### 스킬 — 명시 호출
 
-### 피처 개발
-| 명령 | 역할 |
-|------|------|
-| `/ft:roadmap` | Feature.md 생성 (1개~N개) + 구현 순서 도출 |
-| `/ft:build` | Feature.md 의존성 체이닝 → 코드 구현 |
-| `/ft:scan` | 프로젝트 분석 / 기존 폴더 피처 등록 |
-
-### 코드 리뷰
-| 명령 | 역할 |
-|------|------|
-| `/ft:review` | 5관점 리뷰 (버그/보안/성능/구조/AI슬롭) |
-| `/ft:review --fix` | 리뷰 + 안전 항목 자동 수정 |
-
-### Git
-| 명령 | 역할 |
-|------|------|
-| `/ft:push` | 커밋 → PR → 머지 한방 |
-| `/ft:pull` | 기본브랜치 최신 반영 |
-| `/ft:release` | dev → main 릴리스 |
-
-### 플러그인 개발
-| 명령 | 역할 |
-|------|------|
-| `/ft:dev status` | 플러그인 상태 확인 |
-| `/ft:dev edit {스킬}` | 스킬 수정 |
-| `/ft:dev add {스킬}` | 스킬 추가 |
-| `/ft:dev release` | 버전 올리기 + 배포 |
+| 카테고리 | 명령 | 역할 |
+|---------|------|------|
+| **Git** | `/ft:push` | 커밋 → PR → 머지 한방 |
+| | `/ft:pull` | 기본브랜치 최신 반영 |
+| | `/ft:release` | dev → main 릴리스 |
+| **패키지** | `/ft:pkg-dev` | UPM 로컬 개발 모드 |
+| | `/ft:pkg-list` | 패키지 목록 + 업데이트 확인 |
+| | `/ft:pkg-publish` | UPM 패키지 배포 |
+| **메타** | `/ft:dev` | ft 자체 수정/배포 |
+| | `/ft:rules` | 프로젝트 룰 관리 + 훅 등록 |
+| | `/ft:skill-creator-project` | 프로젝트 전용 가이드 스킬 생성 |
+| **설계** | `/ft:design` | 설계 대화 (저장 X) |
 
 ## 핵심 개념
 
-### Feature.md
-피처 폴더 루트에 있는 마크다운 파일. Claude가 참고하는 "지도" 역할.
+### cwm-roslyn-navigator 통합
 
-```markdown
-# Inventory
+에이전트는 cwm MCP의 의미 분석을 **1순위 도구**로 사용:
+- `find_symbol` / `get_public_api` — 기존 API 정확 파악 (큰 파일 안 읽고)
+- `get_dependency_graph` — 호출 트리 자동 추적
+- `find_callers` / `find_references` — 영향 범위 분석
+- `detect_circular_dependencies` — 구조 감사
 
-## 상태
-stable
+Roslyn 기반이라 정확하고, 결정론적이고, 빠르다.
 
-## 용도
-인게임 아이템 소지/관리
+### 자동 컨텍스트
 
-## 의존성
-- ../Shop — 상점 연동
+코드 본문 작업 시 다음이 **모두 자동으로** 들어옴:
+- **auto memory** — 결정/제약/선호 (`project_*.md`, `feedback_*.md`)
+- **context-mode** — 세션 상태 (최근 변경/에러)
+- **rules/ 인덱스** — `forbidden`, `architecture` 등
+- **CLAUDE.md** — 프로젝트 룰
 
-## 구조
-- Scripts/InventoryService.cs — 핵심 로직
+에이전트가 별도로 호출하지 않아도 컨텍스트가 형성된다.
 
-## API (외부 피처가 참조 가능)
-- InventoryService.AddItem(itemId, count) → Scripts/InventoryService.cs
+### Unity 한계 영역 폴백
 
-## 주의사항
-- 수량 음수 불가
+cwm은 Roslyn 기반이라 다음을 못 봄:
+- `[SerializeField]`, `[Inject]` 같은 attribute
+- prefab/Inspector 와이어링
+- reflection 기반 콜백 (`OnDrawGizmos`, `[RuntimeInitializeOnLoadMethod]`)
+- Quantum의 ViewComponent shadowing 패턴 (`new` 키워드)
+
+이 영역은 자동으로 `Grep`/`Read` 폴백.
+
+### 결정 분리
+
+| 무엇 | 어디 |
+|------|------|
+| 코드 사실 (호출 그래프, API 시그니처) | cwm |
+| 결정/제약/선호 | auto memory |
+| 세션 상태 (작업 흐름) | context-mode |
+| 룰 (금지 패턴, 아키텍처) | `rules/*.md` (사용자 프로젝트) |
+
+각자 자기 영역만 담당. ft는 이 시스템들을 **통합해서 활용**한다.
+
+## 워크플로 예시
+
 ```
-
-### 의존성 체이닝
-`/ft:build` 실행 시 Feature.md의 의존성을 따라가며 관련 피처의 API를 자동으로 읽고 활용합니다. 기존 코드를 무시하고 새로 만드는 문제를 방지합니다.
-
-### 자동 감지 (훅)
-피처 폴더에서 작업하면 Feature.md 컨텍스트가 자동으로 표시됩니다. 명시적으로 `/ft:build`를 호출하지 않아도 피처 정보를 참고할 수 있습니다.
-
-### 경험 학습
-`/ft:build` 중 발견한 프로젝트 특유의 패턴을 `.featurecraft/learnings/`에 저장합니다. 다음 빌드 시 자동으로 참고합니다.
-
-### 피처 인덱스
-`.featurecraft/FEATURE_INDEX.md`에 전체 피처 목록이 3KB 이하로 압축됩니다. 세션 시작 시 빠르게 프로젝트 전체 구조를 파악할 수 있습니다.
-
-## 프로젝트 구조 예시
-
+"카드 진화 시 강화 수치가 누락돼"
+  ↓ 자동 발동
+code-diagnose
+  → 직접 원인 (CardEvolveCase.TryEvolve:31)
+  → 구조적 원인 (진화/강화 분산)
+  → 옵션 A 빠른 수정 / 옵션 B 구조적 수정
+  ↓ "B로 가자"
+code-writer (자동 발동)
+  → 7원칙 + cwm 검증 + 구현
+  ↓
+/ft:push
+  → 커밋 + PR + 머지
 ```
-MyProject/
-├── InGame/
-│   ├── Inventory/
-│   │   ├── Feature.md          ← 피처 마커
-│   │   └── Scripts/
-│   ├── Shop/
-│   │   ├── Feature.md
-│   │   └── Scripts/
-│   └── Combat/
-│       ├── Feature.md          ← 상위 피처 (하위 목록 포함)
-│       ├── Skill/
-│       │   ├── Feature.md
-│       │   └── Scripts/
-│       └── Buff/
-│           ├── Feature.md
-│           └── Scripts/
-└── .featurecraft/
-    ├── FEATURE_INDEX.md        ← 자동 생성
-    └── learnings/              ← 자동 생성
-```
-
-## 플래그
-
-| 플래그 | 스킬 | 동작 |
-|--------|------|------|
-| `--fix` | `/ft:review` | 안전 항목 자동 수정 |
-| `--force` | `/ft:build` | Feature.md 없이 진행 |
 
 ## 설계 철학
 
-SuperClaude와 OhMyClaude의 장점을 흡수하고 단점을 제거했습니다.
+**제거한 것** (FeatureCraft 0.x → 0.15.0):
+- Feature.md 기반 의존성 체이닝 → cwm으로 대체 (정확도 압승)
+- 피처 단위 워크플로 → 에이전트 자동 위임으로 단순화
+- 매번 문서 갱신 부담 → auto memory + context-mode 자동 캡처
+- diff 리뷰 도구 → cwm `detect_antipatterns` + code-auditor로 대체
 
-**흡수한 것:**
-- 명령 체이닝, 경계 패턴, 자동수정 기준 (SuperClaude)
-- 모호성 체크, 자연어 트리거, 검증 루프, 경험 학습 (OhMyClaude)
-
-**제거한 것:**
-- MCP 의존성 6개 → 제로
-- 페르소나 11개, 에이전트 19개 → 없음
-- 30+개 명령 → 8개
+**유지한 것**:
+- 핀포인트 작업의 1회 호출 (Git/패키지)
+- 7원칙 (단일 책임 / Premature Abstraction 금지 등)
+- 12체크리스트 감사
+- Unity 예외 해석 (Authoring/Bridge/Bootstrap/ECS)
 
 ## 라이센스
 
