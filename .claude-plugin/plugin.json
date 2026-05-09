@@ -1,7 +1,7 @@
 {
   "name": "ft",
   "description": "AI code workflow plugin. Pinpoint skills for Git/package/meta operations + auto-invoking agents for code writing, diagnosis, and structural audit. Integrates with cwm-roslyn-navigator MCP for accurate code facts.",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "license": "MIT",
   "author": {
     "name": "tjdtj"

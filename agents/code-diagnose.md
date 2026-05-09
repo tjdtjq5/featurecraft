@@ -76,6 +76,8 @@ tools: ["Read", "Grep", "Glob", "Bash"]
 - **cwm `find_references(symbolName)`** — 영향 범위
 - **Grep / Read** — Unity 한계 영역 (attribute, prefab ref 등)
 
+> 콜체인이 깊거나 사용처가 多인 케이스는 `code-explorer`에 탐색을 위임해 사용한 도구·카운트가 명시된 보고를 받는 것을 권장.
+
 **출력**: 문제 코드 위치 (`파일:라인`) + 왜 그 코드가 잘못된 결과를 만드는지.
 
 #### 2-B. 구조적 원인 (Why)

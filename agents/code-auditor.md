@@ -14,6 +14,7 @@ audit은 **구조적 건강도**를 본다.
 - 변경 단위 리뷰가 아니다 (코드 변경 직후엔 cwm `detect_antipatterns`로 빠른 점검 가능)
 - 버그 원인 분석은 `code-diagnose`
 - 실제 리팩토링 구현은 `code-writer`
+- 심볼/사용처/의존 관계 탐색만 필요하면 `code-explorer` (cwm 1순위, 보고 양식 표준화)
 
 ## 기본 철학
 

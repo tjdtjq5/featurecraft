@@ -27,6 +27,8 @@ tools: ["Read", "Grep", "Glob", "Bash", "Write", "Edit"]
 
 **cwm 우선, Unity 한계 영역만 Grep/Read 폴백.**
 
+> 대규모 사용처 추적·리네이밍 영향·공개 API 안전성 같은 **탐색 비중이 큰 작업**은 `code-explorer`에 위임하는 것을 권장. 보고에 사용한 cwm 도구 + 카운트가 명시되어 누락 감지가 쉽다.
+
 ### cwm 도구함 (1순위)
 
 | 도구 | 용도 |
