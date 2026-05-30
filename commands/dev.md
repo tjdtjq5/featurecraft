@@ -324,28 +324,21 @@ claude plugin install {plugin}@{marketplace}
 ├── .claude-plugin/
 │   ├── plugin.json          ← 버전 관리
 │   └── marketplace.json     ← 마켓플레이스 메타
-├── agents/                  ← Claude가 위임하는 전문 실행기 (자동 발동)
-│   ├── code-writer.md
-│   ├── code-diagnose.md
-│   └── code-auditor.md
 ├── rules/                   ← 사용 가이드
 │   └── usage.md
-├── skills/                  ← 자동 발동 OK
-│   └── design/SKILL.md
-├── commands/                ← 명시적 호출만 (쓰기/Git/메타)
+├── commands/                ← 명시적 호출만 (Git/패키지/메타)
 │   ├── push.md
 │   ├── pull.md
 │   ├── release.md
 │   ├── dev.md
 │   ├── pkg-dev.md
 │   ├── pkg-list.md
-│   ├── pkg-publish.md
-│   ├── design.md
-│   ├── rules.md
-│   └── skill-creator-project.md
+│   └── pkg-publish.md
 ├── README.md
 └── LICENSE
 ```
+
+> 0.18.0에서 범용 하네스(`agents/`, `skills/design`, `commands/{design,rules,setup,skill-creator-project}`)를 제거했다.
 
 ## 버전 규칙 (Semantic Versioning)
 

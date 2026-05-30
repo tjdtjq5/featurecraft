@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "featurecraft",
-  "description": "AI code workflow plugin. Pinpoint skills + auto-invoking code agents.",
+  "description": "Pinpoint Git and UPM package slash commands for Claude Code.",
   "owner": {
     "name": "tjdtj",
     "email": "tjdtjq5@naver.com"
@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "ft",
-      "description": "AI code workflow plugin. Pinpoint skills for Git/package/meta operations + auto-invoking agents for code writing, diagnosis, and structural audit. Integrates with cwm-roslyn-navigator MCP.",
+      "description": "Pinpoint slash commands for Git and UPM package workflows (commit→PR→merge, package dev/list/publish).",
       "category": "development",
       "source": "./"
     }
